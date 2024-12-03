@@ -1,0 +1,38 @@
+<div class="player-container">
+  <ion-toolbar>
+    <div class="player-controls shadow">
+      <!-- Progress Bar -->
+      <div class="progress-barr" (click)="seekToPosition($event)">
+        <span class="songName" *ngIf="musicData && musicData.length > 0 && musicData[currentSongIndex]">{{ musicData[currentSongIndex].name }}</span>
+        <span> {{ currentTime }} </span>
+
+        <!-- Bottom Song Name Display -->
+
+        <ion-progress-bar #progressBar [value]="progress"></ion-progress-bar>
+        <!-- <span>{{ duration }}</span> -->
+      </div>
+      <!-- Playback Controls -->
+      <div class="playback">
+        <ion-button (click)="previous()" [disabled]="currentSongIndex === 0" fill="clear">
+          <ion-icon name="play-skip-back" color="dark"></ion-icon>
+        </ion-button>
+        <ion-button (click)="pause()" *ngIf="isPlaying" fill="clear">
+          <ion-icon color="dark" name="pause"></ion-icon>
+        </ion-button>
+        <ion-button (click)="play(musicData[currentSongIndex])" *ngIf="!isPlaying" fill="clear">
+          <ion-icon name="play" color="dark"></ion-icon>
+        </ion-button>
+        <ion-button (click)="next()"  fill="clear">
+          <ion-icon name="play-skip-forward" color="dark"></ion-icon>
+        </ion-button>
+      </div>
+    </div>
+
+    
+
+  </ion-toolbar>
+
+  <audio #audioPlayer (timeupdate)="updateProgress()" controls style="display: none;">
+    Your browser does not support the <code>audio</code> element.
+  </audio>
+</div>

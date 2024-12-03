@@ -1,0 +1,56 @@
+.scrollSection {
+    padding: 0 1px;
+  }
+  
+  .wrapper {
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .song-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr); /* 3 columns of equal width */
+    gap: 1px; /* Space between the cards */
+    // margin-top: 20px;
+  }
+  
+  .song-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .card-image img {
+    width: 100%;
+    height: auto;
+    border-radius: 8px;
+  }
+  
+  ion-card-header {
+    text-align: center;
+  }
+  
+  ion-card-title {
+    font-size: 12px;
+    white-space: nowrap;       /* Prevent text from wrapping to the next line */
+    overflow: hidden;          /* Hide overflow content */
+    text-overflow: ellipsis;   /* Add "..." when the text is too long */
+    display: block;            /* Ensure proper ellipsis behavior */
+    width: 100%;               /* Ensure the title takes up the full card width */
+  }
+
+  
+  ion-card-subtitle {
+    font-size: 9px;
+    overflow: hidden;          /* Hide overflow content */
+    text-overflow: ellipsis; 
+    display: block;            /* Ensure proper ellipsis behavior */
+    width: 100%;  
+    white-space: nowrap; 
+  }
+
+  ion-toolbar {
+    --box-shadow: none !important;  /* Removes shadow */
+    --border-width: 0 !important;   /* Removes border */
+  }
+  

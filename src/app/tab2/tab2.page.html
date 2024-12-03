@@ -1,17 +1,36 @@
+
 <ion-header [translucent]="true">
   <ion-toolbar>
     <ion-title>
-      Tab 2
+      BeatNest
     </ion-title>
+  </ion-toolbar>
+  <ion-toolbar >
+    <ion-searchbar [debounce]="1000" (ionInput)="handleInput($event)"></ion-searchbar>
   </ion-toolbar>
 </ion-header>
 
 <ion-content [fullscreen]="true">
-  <ion-header collapse="condense">
-    <ion-toolbar>
-      <ion-title size="large">Tab 2</ion-title>
-    </ion-toolbar>
-  </ion-header>
+  <div class="scrollSection">
+    <div class="wrapper">
+      <div *ngIf="musicData && musicData.length > 0; else noData">
+        <div class="song-grid">
+          <ion-card *ngFor="let song of musicData; let i = index" class="song-card">
+            <div class="card-image" (click)="setCurrentSong(i)">
+              <img [src]="song.image[2]?.link" alt="Song Poster" />
+            </div>
+            <ion-card-header>
+              <ion-card-title>{{ song.name }}</ion-card-title>
+              <ion-card-subtitle>{{ song.primaryArtists }}</ion-card-subtitle>
+            </ion-card-header>
+          </ion-card>
+        </div>
+      </div>
+    </div>
+  </div>
 
-  <app-explore-container name="Tab 2 page"></app-explore-container>
+  <!-- Template for no data -->
+  <ng-template #noData>
+    <p>No songs available</p>
+  </ng-template>
 </ion-content>

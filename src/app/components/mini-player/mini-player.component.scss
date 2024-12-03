@@ -1,0 +1,67 @@
+.player-container {    
+  width: 100%;
+  background-color: transparent;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 10px 0px;
+}
+
+.player-controls {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+}
+
+.progress-barr {
+  width: 100% !important;
+  padding: 0 20px !important;
+}
+
+.playback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 10px;
+}
+
+.current-song {
+  width: 100%;
+  background-color: transparent;
+  padding: 10px;
+  text-align: center;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); /* Example shadow */
+  z-index: 99;
+}
+
+.song-name-container {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.songName {
+  display: inline-block;
+  font-size: 14px;
+  font-weight: bold;
+  width: 120px;                        /* Adjust width according to layout */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;                 /* Prevent wrapping */
+  // animation: scroll 20s linear infinite; /* Scroll animation */
+}
+
+ion-progress-bar {
+  margin-top: 10px;
+}
+
+/* Keyframe for the scrolling effect */
+@keyframes scroll {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(-100%);
+  }
+}

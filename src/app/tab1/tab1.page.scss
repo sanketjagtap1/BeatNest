@@ -1,0 +1,86 @@
+.wrapper{
+
+    padding: 0px 10px !important;
+}
+.sliderContainer {
+    overflow-x: auto;
+    display: flex;
+    gap: 1px; /* Space between cards */
+    scroll-snap-type: x mandatory; /* Smooth snapping */
+    scrollbar-width: none; /* Hide scrollbar in Firefox */
+    -ms-overflow-style: none; /* Hide scrollbar in IE 10+ */
+}
+  
+  .sliderContainer::-webkit-scrollbar {
+    display: none; /* Hide scrollbar in Chrome and Safari */
+  }
+  
+  ion-card {
+    flex: 0 0 auto; /* Prevent cards from shrinking */
+    width: 150px; /* Set a fixed width for cards */
+    scroll-snap-align: start; /* Align each card at the start */
+    margin: 10px 5px;
+    border-radius: 5px;
+    --align-items: center;
+
+  }
+  
+  ion-card-header {
+    padding: 10px;
+      text-align: center;
+  }
+  
+  ion-card-title {
+    font-size: 12px;
+    white-space: nowrap;       /* Prevent text from wrapping to the next line */
+    overflow: hidden;          /* Hide overflow content */
+    text-overflow: ellipsis;   /* Add "..." when the text is too long */
+    display: block;            /* Ensure proper ellipsis behavior */
+    width: 100%;               /* Ensure the title takes up the full card width */
+  }
+
+  
+  ion-card-subtitle {
+    font-size: 9px;
+    overflow: hidden;          /* Hide overflow content */
+    text-overflow: ellipsis; 
+    display: block;            /* Ensure proper ellipsis behavior */
+    width: 100%;  
+    white-space: nowrap; 
+  }
+  
+  .card-image img {
+    width: 100%;
+    height: 130px;
+    object-fit:fill;
+    border-radius: 5px 5px 0px 0px;
+  }
+
+
+  ion-content {
+    display: flex;
+    flex-direction: column; /* Stack mini-player and scroll section vertically */
+  
+    .scrollSection {
+      flex: 1;              /* Take remaining space */
+      overflow-y: auto;     /* Enable scrolling for content */
+      height: 91%;
+    }
+    
+    .miniPlayer {
+  height: 9%;
+  flex-shrink: 0;   /* Prevent resizing */
+  position: sticky; /* Stick to bottom of the viewport */
+  right: 0;
+  left: 0;
+
+  /* Default bottom for non-iOS */
+  bottom: 8px;
+}
+
+/* For iOS devices, adjust the bottom */
+.miniPlayer.ios {
+  bottom: 20px;
+}
+  }
+  
