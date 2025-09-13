@@ -50,6 +50,7 @@ export class MiniPlayerComponent implements OnInit {
   }
 
   ngOnInit() {
+    this.enableBgMode();  // 👈 Add this
     this.currentIndex$.subscribe(index => {
       this.playList$.subscribe(list => this.musicData = list);
 
@@ -82,6 +83,7 @@ export class MiniPlayerComponent implements OnInit {
 
     this.currentFile.play();
     this.isPlaying = true;
+    console.log(this.currentSongIndex)
     this.currentSongIndex = this.musicData.indexOf(song);
 
     // Fetch duration after delay
