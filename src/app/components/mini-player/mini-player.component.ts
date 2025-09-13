@@ -1,140 +1,174 @@
-import { Component, OnInit, ViewChild } from '@angular/core';
+import { Component, OnInit, NgZone } from '@angular/core';
 import { addIcons } from 'ionicons';
-import { playSkipForward, pause, playSkipBack, play, logoIonic } from 'ionicons/icons';
+import { playSkipForward, pause, playSkipBack, play, logoIonic, shuffle, repeat } from 'ionicons/icons';
 import { MusicService } from 'src/app/services/music.service';
 import { Observable } from 'rxjs';
 import { select, Store } from '@ngrx/store';
 import { selectCurrentIndex } from 'src/app/state/selectors/current-index.selectors';
 import { selectPlaylist } from 'src/app/state/selectors/playlist.selectors';
 import { setNextIndex, setPreviousIndex } from 'src/app/state/actions/current-index.actions';
-import { IonHeader, IonToolbar, IonTitle, IonContent, IonMenu, IonMenuButton, IonButton, IonButtons, IonSearchbar, IonList, IonItem, IonLabel, IonTabBar, IonIcon, IonTabButton, IonTabs, IonCard, IonCardHeader, IonCardSubtitle, IonCardContent, IonCardTitle, IonProgressBar, IonFooter, IonText } from '@ionic/angular/standalone';
+import { IonToolbar, IonButton, IonProgressBar, IonIcon, IonText } from '@ionic/angular/standalone';
 import { NgIf } from '@angular/common';
+import { Media, MediaObject } from '@awesome-cordova-plugins/media/ngx';
 
 @Component({
   selector: 'app-mini-player',
   templateUrl: './mini-player.component.html',
   styleUrls: ['./mini-player.component.scss'],
   standalone: true,
-  imports: [IonToolbar, IonButton, IonProgressBar, IonIcon, NgIf]
+  providers: [Media],
+  imports: [IonToolbar, IonButton, IonProgressBar, IonIcon, IonText, NgIf]
 })
 export class MiniPlayerComponent implements OnInit {
-
-  @ViewChild('audioPlayer') audioPlayer: any;
-  @ViewChild('progressBar') progressBar: any;
-  rect: any;
   musicData: any;
   currentSongIndex: number = 0;
+
   isPlaying: boolean = false;
   currentTime: string = '0:00';
   duration: string = '0:00';
   progress: number = 0;
   updateProgressInterval: any;
-  storedCurrentTime: number = 0; // To store the current time when paused
+
+  currentFile: MediaObject | null = null;
+
+  isShuffle: boolean = false;
+  isRepeat: boolean = false;
+  isExpanded: boolean = false;
+
   currentIndex$: Observable<number | null>;
   playList$: Observable<any>;
 
-  constructor(public musicService: MusicService, private store: Store) {
-    addIcons({ logoIonic, play, playSkipBack, pause, playSkipForward });
+  constructor(
+    public musicService: MusicService,
+    private store: Store,
+    private media: Media,
+    private zone: NgZone
+  ) {
+    addIcons({ logoIonic, play, playSkipBack, pause, playSkipForward, shuffle, repeat });
     this.currentIndex$ = this.store.pipe(select(selectCurrentIndex));
     this.playList$ = this.store.pipe(select(selectPlaylist));
   }
 
   ngOnInit() {
     this.currentIndex$.subscribe(index => {
-      this.playList$.subscribe(list => {
-        this.musicData = list;
-      });
+      this.playList$.subscribe(list => this.musicData = list);
+
       this.currentSongIndex = Number(index);
-      this.play(this.musicData[this.currentSongIndex]);
+      if (this.musicData && this.musicData[this.currentSongIndex]) {
+        this.play(this.musicData[this.currentSongIndex]);
+      }
     });
   }
 
-  ngAfterViewInit() {
-    setTimeout(() => {
-      this.rect = this.progressBar.getBoundingClientRect();
-    }, 150);
-  }
-
-  play(song: any) {
-    const audio = this.audioPlayer.nativeElement;
-    audio.src = song.downloadUrl[song.downloadUrl.length - 1].link;
-    audio.load();
-
-    // If the song was paused, resume from the stored time
-    if (this.storedCurrentTime > 0) {
-      audio.currentTime = this.storedCurrentTime;
-    } else {
-      audio.currentTime = 0;  // Start from the beginning if it's the first time playing
+  play(song?: any) {
+    // Resume current song if no new song passed
+    if (!song && this.currentFile) {
+      this.currentFile.play();
+      this.isPlaying = true;
+      return;
     }
 
-    audio.play();
+    // Stop previous song if new one
+    if (this.currentFile) {
+      this.currentFile.stop();
+      this.currentFile.release();
+      clearInterval(this.updateProgressInterval);
+    }
+
+    if (!song) return;
+
+    const url = song.downloadUrl[song.downloadUrl.length - 1].link;
+    this.currentFile = this.media.create(url);
+
+    this.currentFile.play();
     this.isPlaying = true;
     this.currentSongIndex = this.musicData.indexOf(song);
 
-    audio.onloadedmetadata = () => {
-      this.duration = this.formatTime(audio.duration);
-      this.updateProgressInterval = setInterval(() => {
-        this.updateProgress();
-      }, 1000);
-    };
+    // Fetch duration after delay
+    setTimeout(() => {
+      if (this.currentFile) {
+        const dur = this.currentFile.getDuration();
+        if (dur > 0) this.zone.run(() => this.duration = this.formatTime(dur));
+      }
+    }, 1000);
 
-    audio.onended = () => {
-      this.resetProgress();
-      this.next();
-    };
+    // Update progress
+    this.updateProgressInterval = setInterval(() => {
+      if (this.currentFile) {
+        this.currentFile.getCurrentPosition().then(pos => {
+          if (pos >= 0) {
+            this.zone.run(() => {
+              const dur = this.currentFile!.getDuration();
+              this.currentTime = this.formatTime(pos);
+              this.duration = dur > 0 ? this.formatTime(dur) : this.duration;
+              this.progress = dur > 0 ? pos / dur : 0;
+            });
+          }
+        });
+      }
+    }, 1000);
+
+    // Song completed
+    this.currentFile.onSuccess.subscribe(() => {
+      this.zone.run(() => {
+        this.resetProgress();
+        this.next();
+      });
+    });
+
+    this.currentFile.onError.subscribe(err => console.error('[Player] Media error: ', err));
   }
 
   pause() {
-    const audio = this.audioPlayer.nativeElement;
-    audio.pause();
-    this.isPlaying = false;
-
-    // Store the current time when paused
-    this.storedCurrentTime = audio.currentTime;
-
+    if (this.currentFile && this.isPlaying) {
+      this.currentFile.pause();
+      this.isPlaying = false;
+    }
     clearInterval(this.updateProgressInterval);
   }
 
-  next() {
-    this.resetProgress(); // Reset progress when moving to the next song
-    if (this.currentSongIndex < this.musicData.length - 1) {
-      this.store.dispatch(setNextIndex());
+  stop() {
+    if (this.currentFile) {
+      this.currentFile.stop();
+      this.currentFile.release();
+      this.currentFile = null;
     }
-    this.isPlaying = true;
+    this.resetProgress();
+  }
+
+  next() {
+    this.stop();
+    if (this.isShuffle) {
+      const randomIndex = Math.floor(Math.random() * this.musicData.length);
+      this.currentSongIndex = randomIndex;
+      this.play(this.musicData[this.currentSongIndex]);
+    } else {
+      if (this.currentSongIndex < this.musicData.length - 1) {
+        this.store.dispatch(setNextIndex());
+      } else if (this.isRepeat) {
+        this.currentSongIndex = 0;
+        this.play(this.musicData[this.currentSongIndex]);
+      }
+    }
   }
 
   previous() {
-    this.resetProgress(); // Reset progress when moving to the previous song
+    this.stop();
     if (this.currentSongIndex > 0) {
       this.store.dispatch(setPreviousIndex());
     }
-    this.isPlaying = true;
   }
 
-  slideForward(seconds: number = 10) {
-    const audio = this.audioPlayer.nativeElement;
-    if (audio.currentTime + seconds < audio.duration) {
-      audio.currentTime += seconds;
-    } else {
-      audio.currentTime = audio.duration;
-    }
-    this.updateProgress();
+  toggleShuffle() {
+    this.isShuffle = !this.isShuffle;
   }
 
-  slideBackward(seconds: number = 10) {
-    const audio = this.audioPlayer.nativeElement;
-    if (audio.currentTime - seconds > 0) {
-      audio.currentTime -= seconds;
-    } else {
-      audio.currentTime = 0;
-    }
-    this.updateProgress();
+  toggleRepeat() {
+    this.isRepeat = !this.isRepeat;
   }
 
-  updateProgress() {
-    const audio = this.audioPlayer.nativeElement;
-    this.progress = audio.currentTime / audio.duration;
-    this.currentTime = this.formatTime(audio.currentTime);
+  toggleExpand() {
+    this.isExpanded = !this.isExpanded;
   }
 
   formatTime(seconds: number): string {
@@ -146,24 +180,19 @@ export class MiniPlayerComponent implements OnInit {
   resetProgress() {
     this.progress = 0;
     this.currentTime = '0:00';
-    this.storedCurrentTime = 0; // Reset the stored time when changing songs
+    this.duration = '0:00';
     this.isPlaying = false;
     clearInterval(this.updateProgressInterval);
   }
 
-  handleInput(event: any) {
-    let query = event.target.value.toLowerCase();
-    if (query === '') {
-      query = 'Trending-Hindi';
-    }
-    // this.getSongs(query);
-  }
-
   seekToPosition(event: MouseEvent) {
-    const audio = this.audioPlayer.nativeElement as HTMLAudioElement;
-    const clickPosition = event.clientX - this.rect.left;
-    const progress = clickPosition / this.rect.width;
-    audio.currentTime = progress * audio.duration;
-    this.updateProgress(); // Update immediately after seeking
+    if (!this.musicData[this.currentSongIndex] || !this.currentFile) return;
+
+    const rect = (event.target as HTMLElement).getBoundingClientRect();
+    const clickPosition = event.clientX - rect.left;
+    const ratio = clickPosition / rect.width;
+
+    const dur = this.currentFile.getDuration();
+    if (dur > 0) this.currentFile.seekTo(ratio * dur * 1000);
   }
 }

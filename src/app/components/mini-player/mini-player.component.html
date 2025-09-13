@@ -1,38 +1,78 @@
-<div class="player-container">
-  <ion-toolbar>
-    <div class="player-controls shadow">
-      <!-- Progress Bar -->
-      <div class="progress-barr" (click)="seekToPosition($event)">
-        <span class="songName" *ngIf="musicData && musicData.length > 0 && musicData[currentSongIndex]">{{ musicData[currentSongIndex].name }}</span>
-        <span> {{ currentTime }} </span>
+<div class="mini-player-container" *ngIf="musicData && musicData.length > 0">
 
-        <!-- Bottom Song Name Display -->
+  <!-- Mini Player -->
+  <div class="mini-player" *ngIf="!isExpanded" (click)="toggleExpand()">
+    <div class="album-art-mini-wrapper">
+      <img class="album-art-mini" [src]="musicData[currentSongIndex]?.image[2].link" />
+    </div>
 
-        <ion-progress-bar #progressBar [value]="progress"></ion-progress-bar>
-        <!-- <span>{{ duration }}</span> -->
-      </div>
-      <!-- Playback Controls -->
-      <div class="playback">
-        <ion-button (click)="previous()" [disabled]="currentSongIndex === 0" fill="clear">
-          <ion-icon name="play-skip-back" color="dark"></ion-icon>
-        </ion-button>
-        <ion-button (click)="pause()" *ngIf="isPlaying" fill="clear">
-          <ion-icon color="dark" name="pause"></ion-icon>
-        </ion-button>
-        <ion-button (click)="play(musicData[currentSongIndex])" *ngIf="!isPlaying" fill="clear">
-          <ion-icon name="play" color="dark"></ion-icon>
-        </ion-button>
-        <ion-button (click)="next()"  fill="clear">
-          <ion-icon name="play-skip-forward" color="dark"></ion-icon>
-        </ion-button>
+    <div class="song-info-mini">
+      <marquee behavior="scroll" direction="left">
+        <ion-text>{{ musicData[currentSongIndex]?.name }} - {{ musicData[currentSongIndex]?.artist }}</ion-text>
+      </marquee>
+
+      <div class="mini-progress">
+        <ion-text class="mini-current-time">{{ currentTime }}</ion-text>
+        <ion-progress-bar [value]="progress"></ion-progress-bar>
+        <ion-text class="mini-duration">{{ duration }}</ion-text>
       </div>
     </div>
 
-    
+    <ion-button class="play-btn-mini" (click)="isPlaying ? pause() : play()" fill="clear">
+      <ion-icon [name]="isPlaying ? 'pause' : 'play'"></ion-icon>
+    </ion-button>
+  </div>
 
-  </ion-toolbar>
+  <!-- Full Player Overlay -->
+  <div *ngIf="isExpanded" class="full-player-overlay" (click)="toggleExpand()">
+    <div class="full-player" (click)="$event.stopPropagation()">
+      <div class="full-toolbar">
+        <ion-button class="close-btn" fill="clear" (click)="toggleExpand()">
+          <ion-icon name="chevron-down-outline"></ion-icon>
+        </ion-button>
+      </div>
 
-  <audio #audioPlayer (timeupdate)="updateProgress()" controls style="display: none;">
-    Your browser does not support the <code>audio</code> element.
-  </audio>
+      <div class="full-player-content">
+        <div class="album-art-full">
+          <img [src]="musicData[currentSongIndex]?.image[2].link" />
+        </div>
+
+        <div class="song-info-full">
+          <ion-text>
+            <h3>{{ musicData[currentSongIndex]?.name }}</h3>
+            <h4>{{ musicData[currentSongIndex]?.artist }}</h4>
+          </ion-text>
+        </div>
+
+        <div class="progress-full" (click)="seekToPosition($event)">
+          <ion-text>{{ currentTime }}</ion-text>
+          <ion-progress-bar [value]="progress"></ion-progress-bar>
+          <ion-text>{{ duration }}</ion-text>
+        </div>
+
+        <div class="playback-full">
+          <ion-button (click)="previous()" [disabled]="currentSongIndex === 0" fill="clear">
+            <ion-icon name="play-skip-back"></ion-icon>
+          </ion-button>
+
+          <ion-button (click)="isPlaying ? pause() : play()" fill="clear">
+            <ion-icon [name]="isPlaying ? 'pause' : 'play'"></ion-icon>
+          </ion-button>
+
+          <ion-button (click)="next()" fill="clear">
+            <ion-icon name="play-skip-forward"></ion-icon>
+          </ion-button>
+        </div>
+
+        <div class="extra-controls-full">
+          <ion-button fill="clear" (click)="toggleShuffle()">
+            <ion-icon [name]="isShuffle ? 'shuffle' : 'shuffle-outline'"></ion-icon>
+          </ion-button>
+          <ion-button fill="clear" (click)="toggleRepeat()">
+            <ion-icon [name]="isRepeat ? 'repeat' : 'repeat-outline'"></ion-icon>
+          </ion-button>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
