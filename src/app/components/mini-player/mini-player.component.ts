@@ -9,7 +9,7 @@ import { selectPlaylist } from 'src/app/state/selectors/playlist.selectors';
 import { setNextIndex, setPreviousIndex } from 'src/app/state/actions/current-index.actions';
 import { IonHeader, IonToolbar, IonTitle, IonContent, IonMenu, IonMenuButton, IonButton, IonButtons, IonSearchbar, IonList, IonItem, IonLabel, IonTabBar, IonIcon, IonTabButton, IonTabs, IonCard, IonCardHeader, IonCardSubtitle, IonCardContent, IonCardTitle, IonProgressBar, IonFooter, IonText } from '@ionic/angular/standalone';
 import { NgIf } from '@angular/common';
-
+import { BackgroundMode } from '@anuradev/capacitor-background-mode';
 @Component({
   selector: 'app-mini-player',
   templateUrl: './mini-player.component.html',
@@ -40,12 +40,25 @@ export class MiniPlayerComponent implements OnInit {
   }
 
   ngOnInit() {
+    this.enableBgMode();  // 👈 Add this
     this.currentIndex$.subscribe(index => {
       this.playList$.subscribe(list => {
         this.musicData = list;
       });
       this.currentSongIndex = Number(index);
       this.play(this.musicData[this.currentSongIndex]);
+    });
+  }
+
+  async enableBgMode() {
+    await BackgroundMode.enable({
+      silent: false,  // agar true kiya toh notifications/alerts background me nahi aayenge
+      resume: true,   // app resume hone par background mode disable ho jaye
+      title: 'BeatNest is playing',
+      text: 'Your music will continue playing in the background',
+      bigText: false,
+      hidden: false,
+      color: '#4a90e2',   // notification color (Android)
     });
   }
 
@@ -69,6 +82,7 @@ export class MiniPlayerComponent implements OnInit {
 
     audio.play();
     this.isPlaying = true;
+    console.log(this.currentSongIndex)
     this.currentSongIndex = this.musicData.indexOf(song);
 
     audio.onloadedmetadata = () => {
