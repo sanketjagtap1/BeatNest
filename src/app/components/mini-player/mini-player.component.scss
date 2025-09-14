@@ -70,14 +70,17 @@
 /* ----------------------- Full Player Overlay ----------------------- */
 .full-player-overlay {
   position: fixed;
-  inset: 0;
+  inset: 0; /* top:0; right:0; bottom:0; left:0 */
   display: flex;
   justify-content: center;
   align-items: flex-end;
   z-index: 999;
+  background: rgba(255, 255, 255, 0.1); /* semi-transparent */
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
 }
 
-/* ----------------------- Full Player ----------------------- */
+/* Full Player (glass style) */
 .full-player {
   width: 100%;
   max-height: 70%;
@@ -86,6 +89,10 @@
   display: flex;
   flex-direction: column;
   align-items: center;
+  background: rgba(255, 255, 255, 0.1); /* semi-transparent glass */
+  backdrop-filter: blur(15px) saturate(180%);
+  -webkit-backdrop-filter: blur(15px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.2); /* optional subtle border */
   animation: slideUp 0.3s ease forwards;
 }
 

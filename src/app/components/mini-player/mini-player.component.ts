@@ -50,11 +50,10 @@ export class MiniPlayerComponent implements OnInit {
   }
 
   ngOnInit() {
-    this.enableBgMode();  // 👈 Add this
     this.currentIndex$.subscribe(index => {
       this.playList$.subscribe(list => this.musicData = list);
-
       this.currentSongIndex = Number(index);
+
       if (this.musicData && this.musicData[this.currentSongIndex]) {
         this.play(this.musicData[this.currentSongIndex]);
       }
@@ -66,6 +65,7 @@ export class MiniPlayerComponent implements OnInit {
     if (!song && this.currentFile) {
       this.currentFile.play();
       this.isPlaying = true;
+      this.startProgressUpdater();
       return;
     }
 
@@ -74,16 +74,15 @@ export class MiniPlayerComponent implements OnInit {
       this.currentFile.stop();
       this.currentFile.release();
       clearInterval(this.updateProgressInterval);
+      this.currentFile = null;
     }
 
     if (!song) return;
 
     const url = song.downloadUrl[song.downloadUrl.length - 1].link;
     this.currentFile = this.media.create(url);
-
     this.currentFile.play();
     this.isPlaying = true;
-    console.log(this.currentSongIndex)
     this.currentSongIndex = this.musicData.indexOf(song);
 
     // Fetch duration after delay
@@ -94,21 +93,7 @@ export class MiniPlayerComponent implements OnInit {
       }
     }, 1000);
 
-    // Update progress
-    this.updateProgressInterval = setInterval(() => {
-      if (this.currentFile) {
-        this.currentFile.getCurrentPosition().then(pos => {
-          if (pos >= 0) {
-            this.zone.run(() => {
-              const dur = this.currentFile!.getDuration();
-              this.currentTime = this.formatTime(pos);
-              this.duration = dur > 0 ? this.formatTime(dur) : this.duration;
-              this.progress = dur > 0 ? pos / dur : 0;
-            });
-          }
-        });
-      }
-    }, 1000);
+    this.startProgressUpdater();
 
     // Song completed
     this.currentFile.onSuccess.subscribe(() => {
@@ -196,5 +181,23 @@ export class MiniPlayerComponent implements OnInit {
 
     const dur = this.currentFile.getDuration();
     if (dur > 0) this.currentFile.seekTo(ratio * dur * 1000);
+  }
+
+  private startProgressUpdater() {
+    clearInterval(this.updateProgressInterval);
+    this.updateProgressInterval = setInterval(() => {
+      if (this.currentFile) {
+        this.currentFile.getCurrentPosition().then(pos => {
+          if (pos >= 0) {
+            this.zone.run(() => {
+              const dur = this.currentFile!.getDuration();
+              this.currentTime = this.formatTime(pos);
+              this.duration = dur > 0 ? this.formatTime(dur) : this.duration;
+              this.progress = dur > 0 ? pos / dur : 0;
+            });
+          }
+        });
+      }
+    }, 500); // smoother updates
   }
 }
