@@ -183,21 +183,29 @@ export class MiniPlayerComponent implements OnInit {
     if (dur > 0) this.currentFile.seekTo(ratio * dur * 1000);
   }
 
-  private startProgressUpdater() {
-    clearInterval(this.updateProgressInterval);
-    this.updateProgressInterval = setInterval(() => {
-      if (this.currentFile) {
-        this.currentFile.getCurrentPosition().then(pos => {
-          if (pos >= 0) {
-            this.zone.run(() => {
-              const dur = this.currentFile!.getDuration();
-              this.currentTime = this.formatTime(pos);
-              this.duration = dur > 0 ? this.formatTime(dur) : this.duration;
-              this.progress = dur > 0 ? pos / dur : 0;
-            });
-          }
-        });
-      }
-    }, 500); // smoother updates
-  }
+private startProgressUpdater() {
+  clearInterval(this.updateProgressInterval);
+  this.updateProgressInterval = setInterval(() => {
+    if (this.currentFile) {
+      this.currentFile.getCurrentPosition().then(pos => {
+        if (pos >= 0) {
+          this.zone.run(() => {
+            const dur = this.currentFile!.getDuration();
+            this.currentTime = this.formatTime(pos);
+            if (dur > 0) {
+              this.duration = this.formatTime(dur);
+              this.progress = pos / dur;
+              // Detect end manually
+              if (pos >= dur - 1) {
+                clearInterval(this.updateProgressInterval);
+                this.next();
+              }
+            }
+          });
+        }
+      });
+    }
+  }, 1000);
+}
+
 }
